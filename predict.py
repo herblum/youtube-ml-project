@@ -1,18 +1,24 @@
 import pickle
+import uvicorn
+from fastapi import FastAPI
+from pydantic import BaseModel 
+
+
+app = FastAPI(title="youtube-ml-project")
 
 with open("model.bin", "rb") as f_out:
     pipeline = pickle.load(f_out)
 
-sample = {'category': 'Education', 
- 'duration_sec': 1201, 
- 'title_length': 72, 
- 'thumbnail_face': 0, 
- 'upload_hour': 13, 
- 'upload_day': 'Sat', 
- 'tags_count': 15, 
- 'description_length': 569, 
- 'subscriber_count': 2789543}
+def predict_single(video: dict):
+    result = pipeline.predict_proba([video])[0, 1]
+    return float(result)
 
-sample_pred = pipeline.predict_proba([sample])[:, 1]
+@app.post("/predict")
+def predict(video: dict):
+    prediction = predict_single(video)
 
-print(sample_pred)
+    return {"viral_probability": prediction, 
+            "is_viral": prediction > 0.5}
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
