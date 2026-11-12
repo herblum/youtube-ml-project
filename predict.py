@@ -1,7 +1,8 @@
+import pandas as pd
 import pickle
 import uvicorn
+from train_log import log_transform_subscriber_count, add_cyclical_features
 from fastapi import FastAPI
-from pydantic import BaseModel 
 
 
 app = FastAPI(title="youtube-ml-project")
@@ -10,7 +11,8 @@ with open("model.bin", "rb") as f_out:
     pipeline = pickle.load(f_out)
 
 def predict_single(video: dict):
-    result = pipeline.predict_proba([video])[0, 1]
+    df = pd.DataFrame([video])
+    result = pipeline.predict_proba(df)[0, 1]
     return float(result)
 
 @app.post("/predict")
