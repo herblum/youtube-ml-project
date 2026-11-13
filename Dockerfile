@@ -7,7 +7,7 @@ WORKDIR /app
 COPY ".python-version" "pyproject.toml" "uv.lock" ./
 RUN uv sync --locked
 
-COPY "predict.py" "model.bin" ./
+COPY "predict.py" "transformers.py" "model.bin"  ./
 
 EXPOSE 8000
 

@@ -1,14 +1,14 @@
 import numpy as np
 import pandas as pd
 import kagglehub
+import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.compose import make_column_transformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import average_precision_score
-import pickle
+from sklearn.metrics import roc_auc_score
+from transformers import log_transform_subscriber_count, add_cyclical_features
 
 
 # Parameters for model training
@@ -51,21 +51,6 @@ def drop_split_dataset(df):
     return df_train, df_test, y_train, y_test
 
 
-# Feature engineering functions
-
-def log_transform_subscriber_count(df):
-    df = df.copy()
-    df["log_subscriber_count"] = np.log1p(df["subscriber_count"])
-    return df.drop(columns=["subscriber_count"])
-
-
-def add_cyclical_features(df):
-    df = df.copy()
-    df["hour_sin"] = np.sin(2 * np.pi * df["upload_hour"] / 24)
-    df["hour_cos"] = np.cos(2 * np.pi * df["upload_hour"] / 24)
-    return df.drop(columns=["upload_hour"])
-
-
 # Define numerical features (left out hour_sin and hour_cos, as they are already scaled)
 numerical_features = ['duration_sec', 'title_length', 'tags_count', 'description_length', 'log_subscriber_count']
 
@@ -91,8 +76,8 @@ def train(df_train, y_train, df_test, y_test, C=0.01, random_state=42):
 
     pipeline.fit(df_train, y_train)
     y_pred = pipeline.predict_proba(df_test)[:, 1]
-    aucpr = average_precision_score(y_test, y_pred)
-    return pipeline, aucpr
+    auc = roc_auc_score(y_test, y_pred)
+    return pipeline, auc
 
 
 def save_model(pipeline, filename="model.bin"):
@@ -106,10 +91,10 @@ if __name__ == "__main__":
     df_train, df_test, y_train, y_test = drop_split_dataset(df)
 
     # Fit the entire pipeline on training data and test
-    pipeline, aucpr = train(df_train, y_train, df_test, y_test)
+    pipeline, auc = train(df_train, y_train, df_test, y_test)
 
     # Save the trained model
     save_model(pipeline)
 
-    print(f"Test AUC-PR: {aucpr:.4f}")
+    print(f"Test ROC AUC: {auc:.4f}")
     print('Model saved to model.bin')

@@ -1,7 +1,7 @@
 import pandas as pd
 import pickle
 import uvicorn
-from train_log import log_transform_subscriber_count, add_cyclical_features
+from transformers import log_transform_subscriber_count, add_cyclical_features
 from fastapi import FastAPI
 
 
