@@ -1,6 +1,8 @@
 import requests
 
 url = "http://0.0.0.0:8000/predict"
+# Deployment URL
+# url = "https://youtube-ml-project.fly.dev/predict"
 
 test_sample = {
   "category": "Education",
